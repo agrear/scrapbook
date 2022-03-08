@@ -9,6 +9,10 @@
 
   <div style="margin-top: 1rem;">
     Location: {$activeRoute.url}
+    <br /><br />
+    Internal: {$activeRoute.router.url.internal()}
+    <br /><br />
+    External: {$activeRoute.router.url.external()}
   </div>
 
   <div style="margin-top: 2rem;">

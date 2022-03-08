@@ -3,12 +3,16 @@
 
   import routes from '../../../.routify/routes.default.js';
 
-  const config = {
-    useHash: true
+  const urlRewrite: RoutifyRuntimeOptions['urlRewrite'] = {
+    toInternal: url => {
+      const hashIndex = url.indexOf('#');
+      return hashIndex !== -1 ? url.slice(hashIndex + 1) : '/';
+    },
+    toExternal: url => `#${url}`
   };
 </script>
 
-<Router {routes} {config} />
+<Router {routes} {urlRewrite} />
 
 <style>
   :global(body) {
