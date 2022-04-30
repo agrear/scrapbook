@@ -1,0 +1,30 @@
+@use "./theme";
+
+@use "@material/button/mdc-button";
+@use "@material/checkbox/mdc-checkbox";
+@use "@material/chips/styles";
+@use "@material/form-field/mdc-form-field";
+@use "@material/icon-button/mdc-icon-button";
+@use "@material/list/mdc-list";
+@use "@material/menu-surface/mdc-menu-surface";
+@use "@material/menu/mdc-menu";
+@use "@material/radio/mdc-radio";
+@use "@material/typography/mdc-typography";
+
+:root {
+  // Remove focus highlight on buttons
+  --mdc-filled-button-focus-state-layer-opacity: 0;
+  --mdc-outlined-button-focus-state-layer-opacity: 0;
+  --mdc-protected-button-focus-state-layer-opacity: 0;
+  --mdc-text-button-focus-state-layer-opacity: 0;
+  // Remove focus highlight on radio buttons
+  --mdc-radio-selected-focus-state-layer-opacity: 0;
+  --mdc-radio-selected-pressed-state-layer-opacity: 0;
+  --mdc-radio-unselected-focus-state-layer-opacity: 0;
+  --mdc-radio-unselected-pressed-state-layer-opacity: 0;
+  // Remove focus highlight on switches
+  --mdc-switch-unselected-focus-state-layer-opacity: 0;
+  --mdc-switch-selected-focus-state-layer-opacity: 0;
+  --mdc-switch-unselected-pressed-state-layer-opacity: 0;
+  --mdc-switch-selected-pressed-state-layer-opacity: 0;
+}

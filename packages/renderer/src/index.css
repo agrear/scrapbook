@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply h-screen m-0 p-0 text-white;
+    background-color: #202020;
+    font-family: Roboto;
+  }
+
+  button:focus {
+    @apply outline-none;
+  }
+
+  h1 {
+    @apply text-2xl mb-4;
+  }
+
+  input {
+    @apply block h-8 px-2 border-2 border-gray-400 outline-none transition-all;
+    background: inherit;
+  }
+
+  select {
+    @apply block h-8 px-1.5 border-2 border-gray-400 transition-all;
+    background-color: #424242;
+    font-family: inherit;
+    font-size: inherit;
+  }
+
+  textarea {
+    @apply block px-2 border-2 border-gray-400 outline-none transition-all;
+    background: inherit;
+    resize: none;
+  }
+}

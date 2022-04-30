@@ -1,0 +1,13 @@
+@use "@material/theme/color-palette";
+
+@forward "@material/theme" with (
+  $primary: #14952c,
+  $on-primary: #fff,
+  $secondary: #76ff03,
+  $on-secondary: #fff,
+  $background: #121212,
+  $surface: #121212,
+  $on-surface: #fff,
+  $error: color-palette.$red-900,
+  $on-error: #fff
+);
