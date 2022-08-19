@@ -405,17 +405,18 @@
 <SelectPagesDialog
   open={state === State.SelectingPages}
   onClose={() => state = State.Browsing}
-  onSelect={({ range }) => {
-    console.log(JSON.stringify(range));
-
+  onSelect={({ range }) => {  // Select pages
     newPages = produce(newPages, pages => {
       pages.forEach(page => page.selected = false);
 
       range.forEach(selector => {
         if (Array.isArray(selector)) {
-          pages.slice(selector[0] - 1, selector[1] - 1).forEach(page => (
-            page.selected = true
-          ));
+          let [min, max] = selector;
+          if (min > max) {
+            [min, max] = [max, min];
+          }
+
+          pages.slice(min - 1, max).forEach(page => page.selected = true);
         } else if (selector <= pages.length) {
           pages[selector - 1].selected = true;
         }
