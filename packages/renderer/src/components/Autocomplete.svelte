@@ -178,14 +178,15 @@
       dispatch('open');
 
       if (document.activeElement !== input) {  // First focus
-        if (typeof value === 'string') {
+        if (multiple && typeof value === 'string') {
           const trimmed = value.trimEnd();
           if (trimmed && !trimmed.endsWith(separator)) {
+            // Add separator for convenience
             value += `${separator} `;
           }
         }
 
-        setCursor(value.length);  // Set cursor to end
+        setCursor((value ?? '').length);  // Set cursor to end
       }
     }
   }
