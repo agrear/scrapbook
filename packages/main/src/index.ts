@@ -28,7 +28,9 @@ if (!app.requestSingleInstanceLock()) {
       });
 
       if (store.get('preferences.window.maximized')) {
-        window.maximize();
+        window.once('ready-to-show', () => {
+          window?.maximize();
+        });
       }
     } else if (windowState === 'borderless') {
       window = createWindow({
