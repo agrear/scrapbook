@@ -19,7 +19,7 @@ export function createWindow(
     ...options,
     webPreferences: {
       sandbox: true,
-      preload: path.join(__dirname, '../../preload/dist/index.cjs')
+      preload: path.join(__dirname, '../../build/preload/index.cjs')
     }
   });
 
