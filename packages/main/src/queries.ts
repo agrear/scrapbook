@@ -108,6 +108,7 @@ export function registerQueries(db: Database): void {
     SELECT
       book.id,
       created,
+      modified,
       title,
       description,
       published,
@@ -162,6 +163,7 @@ export function registerQueries(db: Database): void {
     SELECT
       book.id,
       created,
+      modified,
       title,
       description,
       published,
@@ -197,13 +199,14 @@ export function registerQueries(db: Database): void {
     LEFT JOIN series ON series.id = volume.series_id
     JOIN book_language ON book_language.book_id = book.id
     JOIN language ON language.id = book_language.language_id
-    ORDER BY created DESC
+    ORDER BY modified DESC
   `);
 
   const selectBooksByAuthor = db.prepare(`
     SELECT
       book.id,
       created,
+      modified,
       title,
       description,
       published,
@@ -247,6 +250,7 @@ export function registerQueries(db: Database): void {
     SELECT
       book.id,
       created,
+      modified,
       title,
       description,
       published,
@@ -290,6 +294,7 @@ export function registerQueries(db: Database): void {
     SELECT
       book.id,
       created,
+      modified,
       title,
       description,
       published,
@@ -430,7 +435,11 @@ export function registerQueries(db: Database): void {
 
   const updateBook = db.prepare(`
     UPDATE book
-    SET title = @title, description = @description, published = @published
+    SET
+      modified = strftime('%s', CURRENT_TIMESTAMP),
+      title = @title,
+      description = @description,
+      published = @published
     WHERE id = @bookId
   `);
 
@@ -579,6 +588,7 @@ export function registerQueries(db: Database): void {
     published,
     bookmark,
     created,
+    modified,
     brightness,
     page_fit,
     page_position,
@@ -599,6 +609,7 @@ export function registerQueries(db: Database): void {
     published: number | null,
     bookmark: number,
     created: number,
+    modified: number,
     brightness: number,
     page_fit: ObjectFit,
     page_position: ObjectPosition,
@@ -618,6 +629,7 @@ export function registerQueries(db: Database): void {
       title,
       description,
       created: toDate(created),
+      modified: toDate(modified),
       bookmark,
       published: published !== null ? toDate(published) : null,
       publisher: publisher_name,

@@ -69,6 +69,7 @@ type Layout = {
 
 type MetaData = {
   created: Date,
+  modified: Date,
   title: string,
   authors: string[],
   description: string | null,

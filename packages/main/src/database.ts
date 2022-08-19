@@ -5,6 +5,8 @@ import { iso6393 } from 'iso-639-3';
 export function createDatabase(filename: string, options?: Options): Database {
   const db = sqlite3(filename, options);
 
+  db.pragma('cache_size = -16384000');
+
   createTables(db);
   createTriggers(db);
   migrate(db);
@@ -12,32 +14,33 @@ export function createDatabase(filename: string, options?: Options): Database {
   return db;
 }
 
+const bookColumns = `
+  id TEXT NOT NULL PRIMARY KEY,
+  created INTEGER DEFAULT (strftime('%s', CURRENT_TIMESTAMP)),
+  modified INTEGER DEFAULT (strftime('%s', CURRENT_TIMESTAMP)),
+  title TEXT NOT NULL,
+  description TEXT,
+  published INTEGER,
+  bookmark INTEGER NOT NULL DEFAULT -1,
+  brightness REAL NOT NULL DEFAULT 1.0,
+  page_fit TEXT NOT NULL DEFAULT 'contain',
+  page_position TEXT NOT NULL DEFAULT 'center center',
+  zoom REAL NOT NULL DEFAULT 1.0,
+  CONSTRAINT book_ck_bookmark_is_valid CHECK (bookmark >= -1),
+  CONSTRAINT book_ck_brightness_is_valid CHECK (brightness BETWEEN 0.25 AND 1.25),
+  CONSTRAINT book_ck_page_fit_is_valid CHECK (page_fit IN (
+    'contain', 'cover', 'fill', 'none', 'scale-down'
+  )),
+  CONSTRAINT book_ck_page_position_is_valid CHECK (page_position IN (
+    'left top', 'center top', 'right top',
+    'left center', 'center center', 'right center',
+    'left bottom', 'center bottom', 'right bottom'
+  )),
+  CONSTRAINT book_ck_zoom_is_valid CHECK (zoom BETWEEN 0.5 AND 2.0)
+`;
+
 function createTables(db: Database) {
-  db.prepare(`
-    CREATE TABLE IF NOT EXISTS book (
-      id TEXT NOT NULL PRIMARY KEY,
-      created INTEGER DEFAULT (strftime('%s', CURRENT_TIMESTAMP)),
-      title TEXT NOT NULL,
-      description TEXT,
-      published INTEGER,
-      bookmark INTEGER NOT NULL DEFAULT -1,
-      brightness REAL NOT NULL DEFAULT 1.0,
-      page_fit TEXT NOT NULL DEFAULT 'contain',
-      page_position TEXT NOT NULL DEFAULT 'center center',
-      zoom REAL NOT NULL DEFAULT 1.0,
-      CONSTRAINT book_ck_bookmark_is_valid CHECK (bookmark >= -1),
-      CONSTRAINT book_ck_brightness_is_valid CHECK (brightness BETWEEN 0.25 AND 1.25),
-      CONSTRAINT book_ck_page_fit_is_valid CHECK (page_fit IN (
-        'contain', 'cover', 'fill', 'none', 'scale-down'
-      )),
-      CONSTRAINT book_ck_page_position_is_valid CHECK (page_position IN (
-        'left top', 'center top', 'right top',
-        'left center', 'center center', 'right center',
-        'left bottom', 'center bottom', 'right bottom'
-      )),
-      CONSTRAINT book_ck_zoom_is_valid CHECK (zoom BETWEEN 0.5 AND 2.0)
-    )
-  `).run();
+  db.prepare(`CREATE TABLE IF NOT EXISTS book (${bookColumns})`).run();
 
   db.prepare(`
     CREATE TABLE IF NOT EXISTS author (
@@ -238,20 +241,82 @@ function createTriggers(db: Database) {
   `).run();
 }
 
+function dropTriggers(db: Database) {
+  db.transaction(() => {
+    db.prepare('DROP TRIGGER book_author_trg_deleted').run();
+    db.prepare('DROP TRIGGER book_publisher_trg_deleted').run();
+    db.prepare('DROP TRIGGER book_tag_trg_deleted').run();
+    db.prepare('DROP TRIGGER page_trg_delete').run();
+    db.prepare('DROP TRIGGER page_trg_deleted').run();
+    db.prepare('DROP TRIGGER page_trg_insert').run();
+    db.prepare('DROP TRIGGER page_trg_inserted').run();
+    db.prepare('DROP TRIGGER volume_trg_deleted').run();
+  })();
+}
+
 function migrate(db: Database) {
   const userVersion = db.pragma('user_version', { simple: true });
 
   if (userVersion === 0) {
-    db.transaction(() => {
-      const insertLanguage = db.prepare(`
-        INSERT INTO language (id, name, type, scope) VALUES (?, ?, ?, ?)
-      `);
+    // Fill 'language' table
+    const insertLanguage = db.prepare(`
+      INSERT INTO language (id, name, type, scope) VALUES (?, ?, ?, ?)
+    `);
 
+    db.transaction(() => {
       iso6393.forEach(({ iso6393: id, name, type, scope }) => {
         insertLanguage.run(id, name, type, scope);
       });
 
-      db.pragma('user_version = 1');
+      db.pragma('user_version = 2');
     })();
+  } else if (userVersion === 1) {
+    // Add 'updated' column to table 'book'
+    db.pragma('foreign_keys = off');
+
+    db.transaction(() => {
+      dropTriggers(db);
+
+      db.prepare(`CREATE TABLE book_new (${bookColumns})`).run();
+
+      db.prepare(`
+        INSERT INTO book_new (
+          id,
+          created,
+          modified,
+          title,
+          description,
+          published,
+          bookmark,
+          brightness,
+          page_fit,
+          page_position,
+          zoom
+        )
+        SELECT
+          id,
+          created,
+          created,
+          title,
+          description,
+          published,
+          bookmark,
+          brightness,
+          page_fit,
+          page_position,
+          zoom
+        FROM book
+      `).run();
+
+      db.prepare('DROP TABLE book').run();
+
+      db.prepare('ALTER TABLE book_new RENAME TO book').run();
+
+      createTriggers(db);
+
+      db.pragma('user_version = 2');
+    })();
+
+    db.pragma('foreign_keys = on');
   }
 }
