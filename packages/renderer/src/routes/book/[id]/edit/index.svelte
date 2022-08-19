@@ -178,7 +178,8 @@
 
       state = State.Saved;
 
-      history.replaceState(null, '', $url('../../../[id]', { id: book.id }));
+      // history.replaceState(null, '', $url('../../../[id]', { id: book.id }));
+      history.back();
 
       return;
     }
