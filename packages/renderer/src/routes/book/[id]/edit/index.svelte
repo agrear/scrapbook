@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   const load: RoutifyLoad = async ({ route }) => {
-    const { id, author, series } = route.params;
+    const { id } = route.params;
 
     return {
       props: {

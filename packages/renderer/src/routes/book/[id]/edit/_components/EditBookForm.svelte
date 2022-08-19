@@ -150,8 +150,6 @@
         findNextMissingNumber(volumes.map(({ number }) => number)) + 1
       );
     }
-
-    console.log(JSON.stringify(referredAuthor));
   });
 </script>
 
@@ -256,7 +254,6 @@
               validateField('volume');
             }
           }}
-          let:item
         />
       </FormControlLabel>
 

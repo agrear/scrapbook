@@ -16,7 +16,7 @@
 		}
 	}
 
-  const searchResetTime = 1000;
+  const searchResetTime = 1000;  // ms
 
   export let options: T[];
   export let value: T | T[] | undefined = undefined;

@@ -104,15 +104,6 @@ export function registerQueries(db: Database): void {
     ORDER BY author.name
   `);
 
-  /*
-  SELECT tag.name FROM book_tag
-  JOIN book_author ON book_author.book_id = book_tag.book_id
-  JOIN tag ON tag.id = book_tag.tag_id
-  GROUP BY author.id, book_tag.tag_id
-  ORDER BY count(book_tag.tag_id) DESC, tag.name
-  LIMIT 10
-  */
-
   const selectBook = db.prepare(`
     SELECT
       book.id,
