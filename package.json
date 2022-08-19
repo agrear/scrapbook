@@ -1,7 +1,7 @@
 {
   "name": "scrapbook",
   "author": "Malte Wassmann",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "Library / Viewer for collections of images",
   "private": true,
   "engines": {
