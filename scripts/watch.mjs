@@ -1,113 +1,65 @@
-#!/usr/bin/node
-
 import { spawn } from 'child_process';
-import electronPath from 'electron';
-import { createServer, build, createLogger } from 'vite';
-
-
-/** @type 'production' | 'development' | 'test' */
-const mode = process.env.MODE = process.env.MODE || 'development';
-
-
-/** @type {import('vite').LogLevel} */
-const LOG_LEVEL = 'warn';
-
-
-/** @type {import('vite').InlineConfig} */
-const sharedConfig = {
-  mode,
-  build: {
-    watch: {}
-  },
-  logLevel: LOG_LEVEL
-};
-
+import electron from 'electron';
+import { createServer, build } from 'vite';
 
 /**
- * @param configFile
- * @param writeBundle
- * @param name
- * @returns {Promise<import('vite').RollupOutput | Array<import('vite').RollupOutput> | import('vite').RollupWatcher>}
+ * @type {(server: import('vite').ViteDevServer) => Promise<import('rollup').RollupWatcher>}
  */
-const getWatcher = ({ name, configFile, writeBundle }) => {
+function watchMain(server) {
+  /**
+   * @type {import('child_process').ChildProcessWithoutNullStreams | null}
+   */
+  let electronProcess = null;
+  const address = server.httpServer.address();
+  const env = Object.assign(process.env, {
+    VITE_DEV_SERVER_HOST: address.address,
+    VITE_DEV_SERVER_PORT: address.port
+  });
+
   return build({
-    ...sharedConfig,
-    configFile,
-    plugins: [{ name, writeBundle }]
-  });
-};
-
-
-/**
- * Start or restart App when source files are changed
- * @param {import('vite').ViteDevServer} viteDevServer
- * @returns {Promise<import('vite').RollupOutput | Array<import('vite').RollupOutput> | import('vite').RollupWatcher>}
- */
-const setupMainPackageWatcher = (viteDevServer) => {
-  // Write a value to an environment variable to pass it to the main process.
-  {
-    const protocol = `http${viteDevServer.config.server.https ? 's' : ''}:`;
-    const host = viteDevServer.config.server.host || 'localhost';
-    const port = viteDevServer.config.server.port; // Vite searches for and occupies the first free port: 3000, 3001, 3002 and so on
-    const path = '/';
-    process.env.VITE_DEV_SERVER_URL = `${protocol}//${host}:${port}${path}`;
-  }
-
-  const logger = createLogger(LOG_LEVEL, {
-    prefix: '[main]'
-  });
-
-  /** @type {ChildProcessWithoutNullStreams | null} */
-  let spawnProcess = null;
-
-  return getWatcher({
-    name: 'reload-app-on-main-package-change',
-    configFile: 'packages/main/vite.config.js',
-    writeBundle() {
-      if (spawnProcess !== null) {
-        spawnProcess.kill('SIGINT');
-        spawnProcess = null;
+    configFile: 'packages/main/vite.config.ts',
+    mode: 'development',
+    plugins: [{
+      name: 'electron-main-watcher',
+      writeBundle() {
+        if (electronProcess) {
+          electronProcess.removeAllListeners();
+          electronProcess.kill();
+        }
+        electronProcess = spawn(electron, ['.'], { stdio: 'inherit', env });
+        electronProcess.once('exit', process.exit);
       }
-
-      spawnProcess = spawn(String(electronPath), ['.']);
-
-      spawnProcess.stdout.on('data', d => d.toString().trim() && logger.warn(d.toString(), {timestamp: true}));
-      spawnProcess.stderr.on('data', d => d.toString().trim() && logger.error(d.toString(), {timestamp: true}));
+    }],
+    build: {
+      watch: {}
     }
   });
-};
-
+}
 
 /**
- * Start or restart App when source files are changed
- * @param {import('vite').ViteDevServer} viteDevServer
- * @returns {Promise<import('vite').RollupOutput | Array<import('vite').RollupOutput> | import('vite').RollupWatcher>}
+ * @type {(server: import('vite').ViteDevServer) => Promise<import('rollup').RollupWatcher>}
  */
-const setupPreloadPackageWatcher = (viteDevServer) => {
-  return getWatcher({
-    name: 'reload-page-on-preload-package-change',
-    configFile: 'packages/preload/vite.config.js',
-    writeBundle() {
-      viteDevServer.ws.send({
-        type: 'full-reload'
-      });
+function watchPreload(server) {
+  return build({
+    configFile: 'packages/preload/vite.config.ts',
+    mode: 'development',
+    plugins: [{
+      name: 'electron-preload-watcher',
+      writeBundle() {
+        server.ws.send({ type: 'full-reload' });
+      }
+    }],
+    build: {
+      watch: {}
     }
   });
-};
+}
 
-(async () => {
-  try {
-    const viteDevServer = await createServer({
-      ...sharedConfig,
-      configFile: 'packages/renderer/vite.config.mjs'
-    });
+// bootstrap
+const server = await createServer({
+  configFile: 'packages/renderer/vite.config.ts'
+});
 
-    await viteDevServer.listen();
-
-    await setupPreloadPackageWatcher(viteDevServer);
-    await setupMainPackageWatcher(viteDevServer);
-  } catch (e) {
-    console.error(e);
-    process.exit(1);
-  }
-})();
+await server.listen();
+await watchPreload(server);
+await watchMain(server);

@@ -11,7 +11,8 @@ const config = {
     buildResources: 'buildResources'
   },
   files: [
-    'packages/**/dist/**'
+    'build/**',
+    'packages/renderer/dist/client/**'
   ],
   nsis: {
     oneClick: false,
