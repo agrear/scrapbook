@@ -13,7 +13,7 @@
       return computePosition(root, badge, {
         placement: 'left-start',
         middleware: [
-          offset(({ floating }) => ({
+          offset(({ rects: { floating } }) => ({
             mainAxis: -floating.width / 2,
             crossAxis: -floating.height / 2
           }))

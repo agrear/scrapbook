@@ -24,7 +24,7 @@
             fallbackPlacements: ['top-start']
           }),
           size({
-            apply({ height, reference }) {
+            apply({ availableHeight: height, rects: { reference } }) {
               if (root) {
                 const style: Partial<CSSStyleDeclaration> = {
                   minWidth: `${reference.width}px`,
