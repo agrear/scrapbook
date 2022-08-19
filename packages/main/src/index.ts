@@ -82,8 +82,8 @@ if (!app.requestSingleInstanceLock()) {
     });
 
     const url = isDev ?
-      import.meta.env.VITE_DEV_SERVER_URL as string :
-      new URL('../renderer/dist/index.html', 'file://' + __dirname).href;
+      `http://${process.env['VITE_DEV_SERVER_HOST']}:${process.env['VITE_DEV_SERVER_PORT']}` :
+      new URL('../packages/renderer/dist/client/index.html', 'file://' + __dirname).href;
 
     window?.loadURL(url);
 
