@@ -46,7 +46,9 @@ type Image = {
 };
 
 type ImageOptions = {
-  thumbnail: boolean
+  thumbnail: boolean,
+  maxWidth?: number,
+  maxHeight?: number
 };
 
 type ImageFile = {

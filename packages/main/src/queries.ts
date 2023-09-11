@@ -805,7 +805,11 @@ export function registerQueries(db: Database): void {
   ipc.handle('getImage', async (
     _event, {
       pageId,
-      options = { thumbnail: false }
+      options: {
+        maxWidth = 3000,
+        maxHeight = 4000,
+        ...options
+      } = { thumbnail: false }
     }: {
       pageId: string,
       options: ImageOptions
@@ -814,6 +818,12 @@ export function registerQueries(db: Database): void {
 
     if (options.thumbnail) {
       Object.assign(image, await createThumbnail(image.data));
+    } else if (image.width > maxWidth || image.height > maxHeight) {
+      // Scale image down for performance
+      Object.assign(image, await createThumbnail(image.data, {
+        width: maxWidth,
+        height: maxHeight
+      }));
     }
 
     return image;
