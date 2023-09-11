@@ -54,7 +54,7 @@ export const thumbnails = (() => {
       };
     },
     free: ({ src }) => freeObjectUrl(src),
-    maxStorage: 50
+    queueSize: 50
   });
 
   const { subscribe } = readable(resourceManager);
