@@ -18,10 +18,7 @@
 
 <div class="h-full">
   <ImageList items={books} let:item={book} let:index>
-    <ImageListItem
-      {index}
-      onClick={() => onCoverClick(book.id)}
-    >
+    <ImageListItem {index} onClick={() => onCoverClick(book.id)}>
       {#await thumbnails.get(book.cover.id) then { src }}
         <ImageListImage
           {src}
